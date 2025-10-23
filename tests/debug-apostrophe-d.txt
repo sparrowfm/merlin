@@ -1,0 +1,1 @@
+drawtext=text='I'll':font='Comic\ Sans\ MS':fontsize=42:fontcolor=ffffff@1.0:x=100:y=h*0.5:enable='between(t,0,1)',drawtext=text='do':font='Comic\ Sans\ MS':fontsize=42:fontcolor=ffffff@0.5:x=200:y=h*0.5:enable='between(t,0,1)'

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>Merlin - Precision Word-by-Word Video Captions</title>
+    <meta name="description" content="Add word-by-word captions to your videos with precision timing. Free, local processing, zero ongoing costs.">
+    <meta name="author" content="sparrowfm">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23e63946'>M</text></svg>">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="site-title">
+                    MERLIN
+                    <span class="beta-badge">BETA</span>
+                </h1>
+                <p class="site-tagline">PRECISION CAPTIONING, FRAME BY FRAME</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Intro Section -->
+        <section class="intro">
+            <div class="intro-content">
+                <h2>Word-by-Word Video Captions</h2>
+                <p><strong>Add professional captions to your videos in minutes.</strong> Upload a video, let Whisper transcribe it with word-level precision, style your captions, and export. Everything runs locally on your machine—no uploads, no subscriptions, no ongoing costs.</p>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <h2 class="section-title">1. UPLOAD VIDEO</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-prompt">
+                    <div class="upload-icon">📹</div>
+                    <p class="upload-text">Drag & drop your video here</p>
+                    <p class="upload-subtext">or click to browse</p>
+                    <input type="file" id="videoInput" accept="video/*" hidden>
+                    <button class="btn-primary" id="browseBtn">BROWSE FILES</button>
+                </div>
+                <div class="upload-info" id="uploadInfo" style="display: none;">
+                    <p class="filename" id="filename"></p>
+                    <p class="filesize" id="filesize"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transcription Section -->
+        <section class="transcribe-section" id="transcribeSection" style="display: none;">
+            <h2 class="section-title">2. TRANSCRIBE</h2>
+            <div class="transcribe-panel">
+                <button class="btn-primary btn-large" id="transcribeBtn">
+                    <span class="btn-icon">🎤</span>
+                    START TRANSCRIPTION
+                </button>
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-label" id="progressLabel">Transcribing...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">0%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Video Preview Section -->
+        <section class="preview-section" id="previewSection" style="display: none;">
+            <h2 class="section-title">3. PREVIEW & STYLE</h2>
+            <div class="video-container">
+                <div class="video-wrapper">
+                    <video id="videoPlayer" controls></video>
+                    <canvas id="captionCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Transcript Editor -->
+            <div class="transcript-editor" id="transcriptEditor" style="display: none;">
+                <h3 class="editor-title">EDIT TRANSCRIPT</h3>
+                <p class="editor-hint">Click any word to edit it. Changes update in real-time.</p>
+                <div class="word-chips" id="wordChips"></div>
+            </div>
+
+            <!-- Caption Styling Controls -->
+            <div class="controls-panel">
+                <h3 class="controls-title">CAPTION STYLING</h3>
+
+                <div class="auto-optimize-section">
+                    <button class="btn-secondary" id="autoOptimizeBtn">
+                        <span class="btn-icon">✨</span>
+                        AUTO-OPTIMIZE STYLE
+                    </button>
+                    <p class="optimize-hint">Analyzes video to suggest optimal colors & fonts</p>
+                </div>
+
+                <!-- Style Templates -->
+                <div class="templates-section">
+                    <h4 class="templates-title">Quick Templates</h4>
+                    <div class="template-buttons">
+                        <button class="template-btn" data-template="social-bold">
+                            <span class="template-icon">🎬</span>
+                            <span class="template-name">Social Bold</span>
+                        </button>
+                        <button class="template-btn" data-template="youtube">
+                            <span class="template-icon">📺</span>
+                            <span class="template-name">YouTube</span>
+                        </button>
+                        <button class="template-btn" data-template="podcast">
+                            <span class="template-icon">🎙️</span>
+                            <span class="template-name">Podcast</span>
+                        </button>
+                        <button class="template-btn" data-template="tiktok">
+                            <span class="template-icon">📱</span>
+                            <span class="template-name">TikTok</span>
+                        </button>
+                        <button class="template-btn" data-template="minimalist">
+                            <span class="template-icon">✨</span>
+                            <span class="template-name">Minimalist</span>
+                        </button>
+                        <button class="template-btn" data-template="professional">
+                            <span class="template-icon">💼</span>
+                            <span class="template-name">Pro Clean</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="fontSize">Font Size</label>
+                    <div class="control-input">
+                        <input type="range" id="fontSize" min="12" max="72" value="32" step="2">
+                        <span class="control-value" id="fontSizeValue">32px</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="fontFamily">Font Family</label>
+                    <div class="control-input">
+                        <select id="fontFamily">
+                            <option value="Arial">Arial</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Trebuchet MS">Trebuchet MS</option>
+                            <option value="Comic Sans MS">Comic Sans MS</option>
+                            <option value="Brush Script MT">Brush Script MT</option>
+                            <option value="Courier New">Courier New</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="fontColor">Font Color</label>
+                    <div class="control-input">
+                        <input type="color" id="fontColor" value="#ffffff">
+                        <span class="control-value" id="fontColorValue">#ffffff</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="bgColor">Background Color</label>
+                    <div class="control-input">
+                        <input type="color" id="bgColor" value="#000000">
+                        <span class="control-value" id="bgColorValue">#000000</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="bgOpacity">Background Opacity</label>
+                    <div class="control-input">
+                        <input type="range" id="bgOpacity" min="0" max="100" value="80" step="5">
+                        <span class="control-value" id="bgOpacityValue">80%</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="captionPosition">Position</label>
+                    <div class="control-input">
+                        <select id="captionPosition">
+                            <option value="bottom">Bottom Center</option>
+                            <option value="top">Top Center</option>
+                            <option value="middle">Middle Center</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section" id="exportSection" style="display: none;">
+            <h2 class="section-title">4. EXPORT</h2>
+            <div class="export-panel">
+                <button class="btn-primary btn-large" id="exportBtn">
+                    <span class="btn-icon">⬇</span>
+                    RENDER & DOWNLOAD VIDEO
+                </button>
+                <div class="export-progress" id="exportProgress" style="display: none;">
+                    <div class="progress-label" id="exportLabel">Rendering video...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="exportFill"></div>
+                    </div>
+                    <div class="progress-status" id="exportStatus">0%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <p>
+                <strong>Merlin</strong> is free and open source.
+                <a href="https://github.com/sparrowfm/merlin" target="_blank" rel="noopener">View on GitHub</a>
+            </p>
+            <p class="footer-subtext">
+                Powered by <a href="https://github.com/openai/whisper" target="_blank" rel="noopener">Whisper</a> and <a href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a>
+            </p>
+            <p class="footer-copyright">
+                © 2025 <a href="https://sparrowfm.github.io/sparrow/" target="_blank" rel="noopener">Neel Ketkar</a>
+            </p>
+        </footer>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+
+    <!-- GoatCounter Analytics -->
+    <script data-goatcounter="https://sparrowfm.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+drawtext=text='TEST':font='Arial':fontsize=32:fontcolor=ffffff@1.0:x=(w-text_w)/2:y=(h-text_h)/2:enable=between(t,1.5,1.98)

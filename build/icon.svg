@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Red gradient background -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e63946;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d62828;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded rectangle background -->
+  <rect width="1024" height="1024" rx="180" fill="url(#bgGrad)"/>
+
+  <!-- Bold "M" letter -->
+  <text x="512" y="720"
+        font-family="Arial Black, sans-serif"
+        font-size="680"
+        font-weight="900"
+        fill="#ffffff"
+        text-anchor="middle"
+        style="text-shadow: 8px 8px 0px rgba(0,0,0,0.3)">M</text>
+
+  <!-- Yellow accent stripe (like the tagline background) -->
+  <rect x="200" y="100" width="624" height="80" fill="#ffb703"/>
+</svg>

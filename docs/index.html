@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>Merlin - Precision Word-by-Word Video Captions for macOS</title>
+    <meta name="title" content="Merlin - Precision Word-by-Word Video Captions for macOS">
+    <meta name="description" content="Free, open-source macOS app for adding professional word-by-word captions to your videos. Powered by Whisper and FFmpeg. No uploads, no subscriptions, zero ongoing costs.">
+    <meta name="keywords" content="video captions, subtitles, whisper, ffmpeg, macos app, word-level timestamps, video editing, free captioning, open source">
+    <meta name="author" content="Neel Ketkar">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sparrowfm.github.io/merlin/">
+    <meta property="og:title" content="Merlin - Precision Word-by-Word Video Captions for macOS">
+    <meta property="og:description" content="Free, open-source macOS app for adding professional word-by-word captions to your videos. Powered by Whisper and FFmpeg. No uploads, no subscriptions, zero ongoing costs.">
+    <meta property="og:image" content="https://sparrowfm.github.io/merlin/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://sparrowfm.github.io/merlin/">
+    <meta property="twitter:title" content="Merlin - Precision Word-by-Word Video Captions for macOS">
+    <meta property="twitter:description" content="Free, open-source macOS app for adding professional word-by-word captions to your videos. Powered by Whisper and FFmpeg. No uploads, no subscriptions, zero ongoing costs.">
+    <meta property="twitter:image" content="https://sparrowfm.github.io/merlin/og-image.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sparrowfm.github.io/merlin/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23e63946'>M</text></svg>">
+
+    <style>
+        :root {
+            --color-primary: #e63946;
+            --color-primary-dark: #d62828;
+            --color-highlight: #ffb703;
+            --color-text: #1a1a2e;
+            --color-text-light: #16213e;
+            --color-bg: #f5f5f5;
+            --color-white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--color-text);
+            background: var(--color-bg);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: var(--color-white);
+            padding: 4rem 2rem;
+            text-align: center;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+        }
+
+        .beta-badge {
+            display: inline-block;
+            background: var(--color-highlight);
+            color: var(--color-text);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-left: 1rem;
+            border: 3px solid var(--color-white);
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+        }
+
+        .description {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: var(--color-white);
+            color: var(--color-primary);
+            padding: 1.25rem 3rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .download-btn:hover {
+            background: var(--color-highlight);
+            color: var(--color-text);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .version {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .features {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature {
+            background: var(--color-white);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .feature h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+        }
+
+        .feature p {
+            color: var(--color-text-light);
+            line-height: 1.8;
+        }
+
+        .tech-stack {
+            background: var(--color-white);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .tech-stack h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary);
+        }
+
+        .tech-stack p {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            color: var(--color-text-light);
+        }
+
+        footer {
+            background: var(--color-text);
+            color: var(--color-white);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--color-highlight);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            margin: 0 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .beta-badge {
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+
+            .description {
+                font-size: 1rem;
+            }
+
+            .download-btn {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>
+            MERLIN
+            <span class="beta-badge">BETA</span>
+        </h1>
+        <p class="tagline">PRECISION CAPTIONING, FRAME BY FRAME</p>
+        <p class="description">
+            <strong>Add professional word-by-word captions to your videos in minutes.</strong>
+            Upload a video, let Whisper transcribe it with word-level precision, style your captions, and export.
+            Everything runs locally on your Mac—no uploads, no subscriptions, no ongoing costs.
+        </p>
+        <a href="https://github.com/sparrowfm/merlin/releases/latest" class="download-btn">
+            Download for macOS
+        </a>
+        <p class="version">Version 0.1.0 (Beta) • Apple Silicon</p>
+    </div>
+
+    <div class="features">
+        <h2>Features</h2>
+        <div class="feature-grid">
+            <div class="feature">
+                <h3>Word-Level Precision</h3>
+                <p>Powered by OpenAI's Whisper, Merlin generates word-by-word timestamps for perfect synchronization with your video.</p>
+            </div>
+            <div class="feature">
+                <h3>Customizable Styling</h3>
+                <p>Choose from pre-built templates or customize fonts, colors, positioning, and opacity to match your brand perfectly.</p>
+            </div>
+            <div class="feature">
+                <h3>Real-Time Preview</h3>
+                <p>See your captions exactly as they'll appear in the final video. Edit words inline and preview changes instantly.</p>
+            </div>
+            <div class="feature">
+                <h3>100% Local Processing</h3>
+                <p>Your videos never leave your Mac. All transcription and rendering happens locally using Whisper and FFmpeg.</p>
+            </div>
+            <div class="feature">
+                <h3>No Subscriptions</h3>
+                <p>Free and open source. No monthly fees, no upload limits, no ongoing costs. Use it as much as you want.</p>
+            </div>
+            <div class="feature">
+                <h3>Professional Quality</h3>
+                <p>Export broadcast-quality videos with perfectly synchronized captions using industry-standard ASS subtitle rendering.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tech-stack">
+        <h2>Built With Best-in-Class Tools</h2>
+        <p>
+            Merlin is powered by <strong>OpenAI Whisper</strong> for state-of-the-art speech recognition and
+            <strong>FFmpeg</strong> for professional video encoding. All wrapped in a beautiful, native macOS experience.
+        </p>
+    </div>
+
+    <footer>
+        <p>
+            <strong>Merlin</strong> is free and open source.
+        </p>
+        <div class="footer-links">
+            <a href="https://github.com/sparrowfm/merlin" target="_blank" rel="noopener">View on GitHub</a>
+            <a href="https://github.com/sparrowfm/merlin/releases" target="_blank" rel="noopener">Download</a>
+            <a href="https://github.com/sparrowfm/merlin/issues" target="_blank" rel="noopener">Report Issue</a>
+        </div>
+        <p style="margin-top: 1.5rem;">
+            © 2025 <a href="https://sparrowfm.github.io/sparrow/" target="_blank" rel="noopener">Neel Ketkar</a>
+        </p>
+    </footer>
+
+    <!-- GoatCounter Analytics -->
+    <script data-goatcounter="https://sparrowfm.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

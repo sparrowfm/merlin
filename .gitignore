@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.dmg
+*.zip
+*.exe
+*.AppImage
+
+# Temporary files
+*.wav
+*.json
+*_captions.ass
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test screenshots
+tests/screenshots/
