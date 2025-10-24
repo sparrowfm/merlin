@@ -11,8 +11,8 @@ dist/
 
 # Temporary files
 *.wav
-*.json
 *_captions.ass
+*_transcript.json
 
 # macOS
 .DS_Store
@@ -27,5 +27,11 @@ dist/
 *.log
 npm-debug.log*
 
-# Test screenshots
+# Test files and artifacts
 tests/screenshots/
+test-*.js
+test-*.sh
+test-*.mp4
+test-*.txt
+filter-*.txt
+LEARNINGS.md

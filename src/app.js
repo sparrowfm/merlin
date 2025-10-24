@@ -103,6 +103,9 @@ const elements = {
     progressLabel: document.getElementById('progressLabel'),
     progressFill: document.getElementById('progressFill'),
     progressStatus: document.getElementById('progressStatus'),
+    spinnerContainer: document.getElementById('spinnerContainer'),
+    spinnerLabel: document.getElementById('spinnerLabel'),
+    spinnerHint: document.getElementById('spinnerHint'),
 
     exportSection: document.getElementById('exportSection'),
     exportBtn: document.getElementById('exportBtn'),
@@ -239,6 +242,7 @@ function resetAppState() {
     elements.progressContainer.style.display = 'none';
     elements.progressFill.style.width = '0%';
     elements.progressStatus.textContent = '0%';
+    elements.spinnerContainer.style.display = 'none';
 
     // Clear export progress
     elements.exportProgress.style.display = 'none';
@@ -535,8 +539,12 @@ async function startTranscription() {
     }
 
     elements.transcribeBtn.disabled = true;
+
+    // Show progress bar instead of spinner
     elements.progressContainer.style.display = 'block';
-    elements.progressLabel.textContent = 'Transcribing with Whisper...';
+    elements.progressLabel.textContent = 'Starting transcription...';
+    elements.progressFill.style.width = '0%';
+    elements.progressStatus.textContent = '0%';
 
     // Check if Electron API is available
     if (!window.electronAPI) {
@@ -551,11 +559,15 @@ async function startTranscription() {
         // Create temporary file path for video
         const videoPath = state.videoFile.path || URL.createObjectURL(state.videoFile);
 
-        // Listen for progress updates
+        // Listen for progress updates with real percentages
         window.electronAPI.onTranscriptionProgress((data) => {
-            console.log('Transcription progress:', data.message);
-            // Whisper doesn't provide % progress, so show indeterminate
-            elements.progressLabel.textContent = 'Analyzing audio...';
+            console.log('Transcription progress:', data);
+            if (data.progress !== undefined) {
+                // Update progress bar with real percentage
+                elements.progressFill.style.width = data.progress + '%';
+                elements.progressStatus.textContent = data.progress + '%';
+                elements.progressLabel.textContent = data.message || 'Transcribing...';
+            }
         });
 
         // Call Whisper via Electron IPC
@@ -565,8 +577,6 @@ async function startTranscription() {
         state.transcript = transcript;
 
         // Update UI
-        elements.progressFill.style.width = '100%';
-        elements.progressStatus.textContent = '100%';
         elements.transcribeBtn.textContent = `✓ ${transcript.words.length} WORDS TRANSCRIBED`;
 
         // Show preview section (step 3)
@@ -582,7 +592,7 @@ async function startTranscription() {
         // Clean up listeners
         window.electronAPI.removeProgressListeners();
 
-        // Reset progress UI after delay
+        // Hide progress bar after completion
         setTimeout(() => {
             elements.progressContainer.style.display = 'none';
             elements.transcribeBtn.disabled = false;

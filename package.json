@@ -1,0 +1,70 @@
+{
+  "name": "merlin",
+  "version": "0.1.0",
+  "description": "Precision word-by-word video captioning with zero ongoing costs",
+  "main": "main.js",
+  "scripts": {
+    "start": "NODE_ENV=development electron .",
+    "test": "node tests/test.js",
+    "test:headed": "HEADLESS=false node tests/test.js",
+    "test:integration": "node tests/integration-test.js",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "keywords": [
+    "video",
+    "captions",
+    "subtitles",
+    "whisper",
+    "ffmpeg",
+    "electron"
+  ],
+  "author": "sparrowfm",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sparrowfm/merlin.git"
+  },
+  "build": {
+    "appId": "com.sparrowfm.merlin",
+    "productName": "Merlin",
+    "files": [
+      "src/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Video"
+    }
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "png2icons": "^2.0.1",
+    "puppeteer": "^21.0.0",
+    "sharp": "^0.34.4"
+  }
+}

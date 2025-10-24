@@ -5,10 +5,43 @@
 
 const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 
 let mainWindow;
+
+/**
+ * Find command in common paths (for GUI apps that don't have full PATH)
+ */
+function findCommand(command) {
+    const commonPaths = [
+        `/opt/homebrew/bin/${command}`,     // Apple Silicon Homebrew
+        `/usr/local/bin/${command}`,        // Intel Homebrew
+        `/usr/bin/${command}`,              // System
+        command                             // Try PATH as fallback
+    ];
+
+    for (const cmdPath of commonPaths) {
+        try {
+            if (fs.existsSync(cmdPath)) {
+                return cmdPath;
+            }
+        } catch (e) {
+            // Continue to next path
+        }
+    }
+
+    // Last resort: try 'which' command
+    try {
+        const result = execSync(`which ${command}`, { encoding: 'utf8' }).trim();
+        if (result) return result;
+    } catch (e) {
+        // Command not found
+    }
+
+    return command; // Return original if not found (will fail with helpful error)
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -126,15 +159,59 @@ ipcMain.handle('transcribe-video', async (event, videoPath) => {
         console.log('Starting transcription:', videoPath);
 
         // Extract audio from video first using FFmpeg
-        const audioPath = videoPath.replace(/\.[^.]+$/, '.wav');
+        // Use temp directory instead of downloads folder
+        const videoBasename = path.basename(videoPath, path.extname(videoPath));
+        const tempDir = os.tmpdir();
+        const audioPath = path.join(tempDir, `${videoBasename}_${Date.now()}.wav`);
 
-        const ffmpeg = spawn('ffmpeg', [
+        const ffmpegPath = findCommand('ffmpeg');
+        console.log('Using FFmpeg at:', ffmpegPath);
+
+        const ffmpeg = spawn(ffmpegPath, [
             '-i', videoPath,
             '-ar', '16000',  // Whisper expects 16kHz
             '-ac', '1',      // Mono
             '-y',            // Overwrite
+            '-progress', 'pipe:2',  // Send progress to stderr
             audioPath
         ]);
+
+        let videoDuration = 0;
+        let lastExtractProgress = 0;
+
+        ffmpeg.stderr.on('data', (data) => {
+            const output = data.toString();
+
+            // Parse video duration from FFmpeg output
+            const durationMatch = output.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+            if (durationMatch && videoDuration === 0) {
+                const hours = parseInt(durationMatch[1]);
+                const minutes = parseInt(durationMatch[2]);
+                const seconds = parseFloat(durationMatch[3]);
+                videoDuration = hours * 3600 + minutes * 60 + seconds;
+                console.log('Video duration:', videoDuration, 'seconds');
+            }
+
+            // Parse progress from FFmpeg output
+            const timeMatch = output.match(/time=(\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+            if (timeMatch && videoDuration > 0) {
+                const hours = parseInt(timeMatch[1]);
+                const minutes = parseInt(timeMatch[2]);
+                const seconds = parseFloat(timeMatch[3]);
+                const currentTime = hours * 3600 + minutes * 60 + seconds;
+                const progress = Math.min(25, Math.round((currentTime / videoDuration) * 25));
+
+                // Only send updates when progress changes
+                if (progress > lastExtractProgress) {
+                    lastExtractProgress = progress;
+                    event.sender.send('transcription-progress', {
+                        progress: progress,
+                        message: 'Extracting audio...'
+                    });
+                    console.log('Audio extraction progress:', progress + '%');
+                }
+            }
+        });
 
         ffmpeg.on('close', (code) => {
             if (code !== 0) {
@@ -142,33 +219,92 @@ ipcMain.handle('transcribe-video', async (event, videoPath) => {
                 return;
             }
 
+            // Get audio duration using ffprobe for progress tracking
+            const ffprobePath = findCommand('ffprobe');
+            let audioDuration = 0;
+
+            try {
+                const durationOutput = execSync(
+                    `${ffprobePath} -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`,
+                    { encoding: 'utf8' }
+                );
+                audioDuration = parseFloat(durationOutput.trim());
+                console.log('Audio duration for progress:', audioDuration, 'seconds');
+            } catch (e) {
+                console.warn('Could not get audio duration:', e.message);
+            }
+
             // Run Whisper with word-level timestamps
-            const whisper = spawn('whisper', [
+            const whisperPath = findCommand('whisper');
+            console.log('Using Whisper at:', whisperPath);
+
+            const whisper = spawn(whisperPath, [
                 audioPath,
                 '--model', 'base',
                 '--language', 'en',
                 '--output_format', 'json',
                 '--word_timestamps', 'True',
-                '--output_dir', path.dirname(audioPath)
+                '--output_dir', tempDir
             ]);
 
             let output = '';
+            let lastProgress = 30; // Start at 30% (after audio extraction)
+            let whisperStarted = false;
+            let progressTimer = null;
+
+            whisper.stderr.on('data', (data) => {
+                const text = data.toString();
+                output += text;
+                console.log('Whisper:', text.trim());
+
+                // Start simulated progress after Whisper begins (after FP16 warning)
+                if (!whisperStarted && text.includes('FP16')) {
+                    whisperStarted = true;
+
+                    // Simulate progress based on estimated processing time
+                    // Base model: ~0.5x realtime (43min video = ~21min processing)
+                    const estimatedSeconds = audioDuration * 0.5;
+                    const progressInterval = 2000; // Update every 2 seconds
+                    const progressPerUpdate = (65 / (estimatedSeconds / 2)); // 65% spread over estimated time
+
+                    console.log(`Starting simulated progress: ${estimatedSeconds}s estimated, ${progressPerUpdate}% per 2s`);
+
+                    progressTimer = setInterval(() => {
+                        if (lastProgress < 95) {
+                            lastProgress = Math.min(95, lastProgress + progressPerUpdate);
+                            event.sender.send('transcription-progress', {
+                                progress: Math.round(lastProgress),
+                                message: 'Transcribing with Whisper...'
+                            });
+                        }
+                    }, progressInterval);
+                }
+            });
 
             whisper.stdout.on('data', (data) => {
                 output += data.toString();
-                // Send progress to renderer
-                event.sender.send('transcription-progress', {
-                    message: data.toString()
-                });
             });
 
             whisper.on('close', (code) => {
+                // Clear progress timer
+                if (progressTimer) {
+                    clearInterval(progressTimer);
+                    progressTimer = null;
+                }
+
                 if (code !== 0) {
                     reject(new Error('Whisper transcription failed'));
                     return;
                 }
 
-                // Read the JSON output
+                // Send 100% progress
+                event.sender.send('transcription-progress', {
+                    progress: 100,
+                    message: 'Transcription complete!'
+                });
+
+                // Read the JSON output from temp directory
+                // Whisper names the JSON file based on the audio file name
                 const jsonPath = audioPath.replace('.wav', '.json');
                 try {
                     const transcript = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
@@ -222,8 +358,28 @@ ipcMain.handle('render-video', async (event, { videoPath, transcript, style, out
     return new Promise((resolve, reject) => {
         console.log('Starting video rendering:', outputPath);
 
+        // Get video resolution using ffprobe
+        const ffprobePath = findCommand('ffprobe');
+        let videoWidth = 1920;
+        let videoHeight = 1080;
+
+        try {
+            const probeOutput = execSync(
+                `${ffprobePath} -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${videoPath}"`,
+                { encoding: 'utf8' }
+            );
+            const [width, height] = probeOutput.trim().split(',').map(Number);
+            if (width && height) {
+                videoWidth = width;
+                videoHeight = height;
+                console.log(`Video resolution: ${videoWidth}x${videoHeight}`);
+            }
+        } catch (e) {
+            console.warn('Could not get video resolution, using default 1920x1080:', e.message);
+        }
+
         // Build ASS subtitle with karaoke timing
-        const assContent = buildAssSubtitle(transcript.words, style);
+        const assContent = buildAssSubtitle(transcript.words, style, videoWidth, videoHeight);
 
         // Write ASS to temporary file
         const assPath = videoPath.replace(/\.[^.]+$/, '_captions.ass');
@@ -231,9 +387,16 @@ ipcMain.handle('render-video', async (event, { videoPath, transcript, style, out
         console.log('ASS subtitle written to:', assPath);
         console.log('ASS content length:', assContent.length, 'bytes');
 
-        const ffmpeg = spawn('ffmpeg', [
+        const ffmpegPath = findCommand('ffmpeg');
+        console.log('Using FFmpeg at:', ffmpegPath);
+
+        // Escape the ASS path for use in FFmpeg filter string
+        // Replace backslashes and colons which are special in filter strings
+        const escapedAssPath = assPath.replace(/\\/g, '\\\\').replace(/:/g, '\\:');
+
+        const ffmpeg = spawn(ffmpegPath, [
             '-i', videoPath,
-            '-vf', `subtitles=${assPath}`,
+            '-vf', `subtitles='${escapedAssPath}'`,
             '-c:a', 'copy',      // Copy audio without re-encoding
             '-y',                // Overwrite
             outputPath
@@ -287,7 +450,7 @@ ipcMain.handle('render-video', async (event, { videoPath, transcript, style, out
  * Much more reliable than 165+ overlapping drawtext filters
  * Uses libass \k tags for word-by-word highlighting
  */
-function buildAssSubtitle(words, style) {
+function buildAssSubtitle(words, style, videoWidth = 1920, videoHeight = 1080) {
     const fontSize = style.fontSize || 64;
     const fontFamily = style.fontFamily || 'Arial';
     const position = style.position || 'bottom';
@@ -329,8 +492,8 @@ function buildAssSubtitle(words, style) {
 
     const header = `[Script Info]
 ScriptType: v4.00+
-PlayResX: 1920
-PlayResY: 1080
+PlayResX: ${videoWidth}
+PlayResY: ${videoHeight}
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
