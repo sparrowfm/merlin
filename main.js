@@ -306,8 +306,12 @@ ipcMain.handle('transcribe-video', async (event, videoPath) => {
                 // Read the JSON output from temp directory
                 // Whisper names the JSON file based on the audio file name
                 const jsonPath = audioPath.replace('.wav', '.json');
-                try {
-                    const transcript = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+
+                // Add small delay to ensure filesystem has synced
+                // (Whisper may close before JSON is fully written to disk)
+                setTimeout(() => {
+                    try {
+                        const transcript = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
                     // Extract word-level timestamps
                     const words = [];
@@ -342,9 +346,10 @@ ipcMain.handle('transcribe-video', async (event, videoPath) => {
                     }
 
                     resolve({ words });
-                } catch (e) {
-                    reject(new Error('Failed to parse Whisper output: ' + e.message));
-                }
+                    } catch (e) {
+                        reject(new Error('Failed to parse Whisper output: ' + e.message));
+                    }
+                }, 500); // Wait 500ms for filesystem to sync
             });
         });
     });
